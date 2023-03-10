@@ -7,6 +7,8 @@
 .section .text
 .globl _start
 
+.extern _rust_entry
+
 _start:
     # Halt harts not equal to ID: 0
     csrr    t0, mhartid             
@@ -20,6 +22,8 @@ _start:
     la      a0, msg
     # Call the puts function
     jal     puts
+
+    call    _rust_entry
 
 # Halt hart
 halt:
