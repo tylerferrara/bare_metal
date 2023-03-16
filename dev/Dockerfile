@@ -36,3 +36,11 @@ RUN mkdir /opt/riscv && \
     ./configure --prefix=/opt/riscv && \
     make -j8 && \
     make install;
+
+# Setup User
+RUN useradd -ms /usr/bin/zsh architect
+USER architect
+WORKDIR /home/architect
+
+# Update Z-Shell
+COPY .zshrc /home/architect/.zshrc
