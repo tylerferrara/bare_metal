@@ -1,14 +1,19 @@
 .align 2
 
+# Define UART constants for qemu-virt
 .equ VIRT_UART_BASE, 0x10000000
 .equ VIRT_UART_REG_TXFIFO, 0x0
 
-
 .section .text
-.globl _start
 
+.globl _start
 .extern _rust_entry
 
+/*
+*   _start is the entrypoint for all harts.
+*   args: none
+*   returns: none
+*/
 _start:
     # Halt harts not equal to ID: 0
     csrr    t0, mhartid             
@@ -25,32 +30,40 @@ _start:
 
     call    _rust_entry
 
-# Halt hart
+/*
+*   halt pauses execution of the current hart.
+*   args: none
+*   returns: none
+*/
 halt:
     # Wait for any inturrupt
     wfi
 
-puts:
+/*
+*   write attempts to print the given ascii values to the console through UART.
+*   args: a0 - pointer to the ascii string to print
+*   returns: none
+*/
+write:
     li      t0, VIRT_UART_BASE
 
-.puts_loop:
+.write_loop:
     # Grab the function argument
     lbu     t1, (a0)
-    beqz    t1, .puts_leave
+    beqz    t1, .write_leave
 
-.puts_wait:
+.write_wait:
     lw      t2, VIRT_UART_REG_TXFIFO(t0)
     # Try again if UART byte isn't ready
-    bltz    t2, .puts_wait
+    bltz    t2, .write_wait
     # Store the byte into UART
     sw      t1, VIRT_UART_REG_TXFIFO(t0)
     # Iterate to the next argument byte
     add     a0, a0, 1
-    j       .puts_loop
+    j       .write_loop
 
-.puts_leave:
+.write_leave:
     ret
-
 
 .section .rodata
 
