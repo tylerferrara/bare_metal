@@ -1,3 +1,6 @@
+run: rusty compile link virt
+
+dev: rusty compile link debug-virt
 
 rusty:
 	cargo build
@@ -14,9 +17,11 @@ virt:
 debug-virt:
 	qemu-system-riscv64 -machine virt -cpu rv64 -smp 4 -m 8192M -nographic -bios none -kernel virt/kernel.elf -S -s
 
-run: rusty compile link virt
+docker-run:
+	docker build . -t NAME_OF_DOCKER_IMAGE
 
-dev: rusty compile link debug-virt
+docker-run:
+	docker run -it --rm -v $(shell pwd):/bare_metal NAME_OF_DOCKER_IMAGE
 
 debug:
 	gdb-multiarch ./virt/kernel.elf --command=./gdb.conf
