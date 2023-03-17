@@ -62,4 +62,7 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://starship.rs/install.sh | sh -s 
 USER architect
 COPY .zshrc /home/architect/.zshrc
 
+# Install Rust (for the user)
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y;
+
 CMD ["/usr/bin/zsh"]

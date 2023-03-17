@@ -22,11 +22,11 @@ _start:
     # Initialize stack
     la      sp, _stack_top
 
-    # Call puts
+    # Call write
     # Give it an argument
     la      a0, msg
     # Call the puts function
-    jal     puts
+    jal     write
 
     call    _rust_entry
 

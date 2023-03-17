@@ -19,16 +19,16 @@ TARGET_DIR:=$(realpath $(PROJECT_DIR)/target/$(TARGET))
 # The following targets are used to build the project on the host machine.
 
 
-run: docker-rm-tag
+run: kill docker-rm-tag
 	docker build -t $(DOCKER_IMAGE_TAG) $(DEV_DIR)
-	docker run -it -p 8080:8080 -v $(PROJECT_DIR):/bare_metal $(DOCKER_IMAGE_TAG)
+	docker run -it -u architect -w /bare_metal -p 8080:8080 -v $(PROJECT_DIR):/bare_metal $(DOCKER_IMAGE_TAG)
 
 dock: docker-rm-tag
 	docker build -t $(DOCKER_IMAGE_TAG) $(DEV_DIR)
 	docker run -t -d -p 8080:8080 -v $(PROJECT_DIR):/bare_metal $(DOCKER_IMAGE_TAG)
 
 kill:
-	docker kill $(shell docker ps -f "ancestor=$(DOCKER_IMAGE_TAG)" -f "status=running" -q)
+	docker kill $(shell docker ps -f "ancestor=$(DOCKER_IMAGE_TAG)" -f "status=running" -q) || true
 
 shell:
 	docker exec -it -u architect -w /bare_metal $(shell docker ps -f "ancestor=$(DOCKER_IMAGE_TAG)" -f "status=running" -q) zsh
@@ -46,12 +46,14 @@ shell:
 #   \_____________________________________________________|_#_#_#_#_#_#_#_#_#_|
 #    \____________________________________________________|_#_#_#_#_#_#_#_#_#_|
 #
-# The following targets are used to build the project within a docker container. This is useful if you don't want to install the toolchain on your host machine.
+# The following targets are defined to run within a docker container. This is useful if you don't want to install the toolchain on your host machine.
 
+metal-setup:
+	rustup target add $(TARGET)
 
-metal-run: rusty compile link virtualize
+metal-run: metal-build metal-compile metal-link metal-virtualize
 
-metal-dev: rusty compile link debug-virt
+metal-dev: metal-build metal-compile metal-link metal-debug-virt
 
 metal-build: metal-compile
 	cargo build
@@ -68,7 +70,7 @@ metal-virtualize:
 metal-debug-virt:
 	qemu-system-riscv64 -machine virt -cpu rv64 -smp 4 -m 8192M -nographic -bios none -kernel $(TARGET_DIR)/debug/kernel.elf -S -s
 
-debug:
+metal-debug:
 	gdb-multiarch $(TARGET_DIR)/debug/kernel.elf --command=$(DEV_DIR)/gdb.conf
 
 docker-rm-tag:
