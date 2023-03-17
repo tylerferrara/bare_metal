@@ -60,7 +60,6 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://starship.rs/install.sh | sh -s 
 
 # Setup User
 USER architect
-WORKDIR /home/architect
 COPY .zshrc /home/architect/.zshrc
 
 CMD ["/usr/bin/zsh"]
