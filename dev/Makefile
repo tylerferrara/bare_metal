@@ -19,19 +19,25 @@ TARGET_DIR:=$(realpath $(PROJECT_DIR)/target/$(TARGET))
 # The following targets are used to build the project on the host machine.
 
 
-run: kill docker-rm-tag
-	docker build -t $(DOCKER_IMAGE_TAG) $(DEV_DIR)
-	docker run -it -u architect -w /bare_metal -p 8080:8080 -v $(PROJECT_DIR):/bare_metal $(DOCKER_IMAGE_TAG)
+shell:
+	@echo "🐚 Running shell attached container..."
+	docker run -it -u architect -w /bare_metal -v $(PROJECT_DIR):/bare_metal $(DOCKER_IMAGE_TAG)
 
-dock: docker-rm-tag
-	docker build -t $(DOCKER_IMAGE_TAG) $(DEV_DIR)
-	docker run -t -d -p 8080:8080 -v $(PROJECT_DIR):/bare_metal $(DOCKER_IMAGE_TAG)
+dock: docker-build
+	@echo "🛥️ Running detached container..."
+	docker run -t -d -v $(PROJECT_DIR):/bare_metal $(DOCKER_IMAGE_TAG)
 
 kill:
-	docker kill $(shell docker ps -f "ancestor=$(DOCKER_IMAGE_TAG)" -f "status=running" -q) || true
+	@echo "🛑 Killing 'possibly' running containers..."
+	docker kill $(shell docker ps -f "ancestor=$(DOCKER_IMAGE_TAG)" -f "status=running" -q) > /dev/null 2>&1 || true
 
-shell:
-	docker exec -it -u architect -w /bare_metal $(shell docker ps -f "ancestor=$(DOCKER_IMAGE_TAG)" -f "status=running" -q) zsh
+docker-build: docker-rm-tag
+	@echo "🏗️ Building container(s)..."
+	docker build -t $(DOCKER_IMAGE_TAG) $(DEV_DIR)
+
+docker-rm-tag:
+	@echo "🗑️ Removing container tag..."
+	docker rmi $(DOCKER_IMAGE_TAG) > /dev/null 2>&1 || true
 
 
 ################################################################################################################################################################
@@ -49,6 +55,7 @@ shell:
 # The following targets are defined to run within a docker container. This is useful if you don't want to install the toolchain on your host machine.
 
 metal-setup:
+	rustup default nightly
 	rustup target add $(TARGET)
 
 metal-run: metal-build metal-compile metal-link metal-virtualize
@@ -73,5 +80,3 @@ metal-debug-virt:
 metal-debug:
 	gdb-multiarch $(TARGET_DIR)/debug/kernel.elf --command=$(DEV_DIR)/gdb.conf
 
-docker-rm-tag:
-	docker rmi $(DOCKER_IMAGE_TAG) || true

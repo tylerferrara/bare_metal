@@ -6,8 +6,9 @@
 
 .section .text
 
-.globl _start
 .extern _rust_entry
+
+.globl _start
 
 /*
 *   _start is the entrypoint for all harts.
@@ -22,13 +23,8 @@ _start:
     # Initialize stack
     la      sp, _stack_top
 
-    # Call write
-    # Give it an argument
-    la      a0, msg
-    # Call the puts function
-    jal     write
-
-    call    _rust_entry
+    jal     ra, _rust_entry
+    ret
 
 /*
 *   halt pauses execution of the current hart.
@@ -39,11 +35,18 @@ halt:
     # Wait for any inturrupt
     wfi
 
+.globl print_stuff
+print_stuff:
+    la      a0, msg
+    # Call the puts function
+    j     write
+
 /*
 *   write attempts to print the given ascii values to the console through UART.
 *   args: a0 - pointer to the ascii string to print
 *   returns: none
 */
+.globl write
 write:
     li      t0, VIRT_UART_BASE
 
@@ -63,7 +66,7 @@ write:
     j       .write_loop
 
 .write_leave:
-    ret
+    jr      ra
 
 .section .rodata
 

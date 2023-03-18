@@ -46,14 +46,18 @@ FROM core AS env
 RUN apt-get update && apt-get install -y \
     git \
     sudo \
-    zsh;
+    zsh \
+    python3-pip;
 
 # Create User
 RUN useradd -ms /usr/bin/zsh architect && \
     echo "architect ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers;
 
+RUN mkdir /bare_metal && \
+    chown architect:architect /bare_metal;
+
 # Install Z-Shell Addons
-RUN mkdir /home/architect/.zsh
+RUN mkdir -p /home/architect/.zsh
 RUN git clone https://github.com/z-shell/F-Sy-H /home/architect/.zsh/F-Sy-H
 RUN git clone https://github.com/zsh-users/zsh-autosuggestions.git /home/architect/.zsh/zsh-autosuggestions
 RUN curl --proto '=https' --tlsv1.2 -sSf https://starship.rs/install.sh | sh -s -- -y
@@ -63,6 +67,11 @@ USER architect
 COPY .zshrc /home/architect/.zshrc
 
 # Install Rust (for the user)
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y;
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain nightly -y;
+RUN /home/architect/.cargo/bin/rustup default nightly && \
+    /home/architect/.cargo/bin/rustup target add riscv64gc-unknown-none-elf;
+
+# GDB Dashboard: https://github.com/cyrus-and/gdb-dashboard
+COPY .gdbinit /home/architect/.gdbinit
 
 CMD ["/usr/bin/zsh"]
