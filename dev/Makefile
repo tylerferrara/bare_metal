@@ -18,6 +18,9 @@ TARGET_DIR:=$(realpath $(PROJECT_DIR)/target/$(TARGET))
 #
 # The following targets are used to build the project on the host machine.
 
+attach:
+	@echo "🕷️ Attaching shell to running container..."
+	docker exec -it -u architect -w /bare_metal $(shell docker ps -f "ancestor=$(DOCKER_IMAGE_TAG)" -f "status=running" -q) /usr/bin/zsh
 
 shell:
 	@echo "🐚 Running shell attached container..."
@@ -59,14 +62,14 @@ metal-setup:
 	rustup default nightly
 	rustup target add $(TARGET)
 
-metal-run: metal-build metal-compile metal-link metal-virtualize
+metal-run: metal-compile metal-link metal-virtualize
 
-metal-dev: metal-build metal-compile metal-link metal-debug-virt
+metal-dev: metal-compile metal-link metal-debug-virt
 
-metal-build: metal-compile
+metal-build:
 	cargo build
 
-metal-compile:
+metal-compile: metal-build
 	riscv64-unknown-elf-as $(SOURCE_DIR)/hello_world.s -o $(TARGET_DIR)/debug/boot.o
 
 metal-link:
