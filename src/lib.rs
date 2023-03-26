@@ -1,11 +1,9 @@
 #![no_std]
 #![no_main]
 
-use core::panic::PanicInfo;
+mod uart;
 
-extern "C" {
-    fn print_stuff();
-}
+use core::panic::PanicInfo;
 
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
@@ -15,8 +13,8 @@ fn panic(_info: &PanicInfo) -> ! {
 #[link_section = ".text"]
 #[no_mangle]
 pub extern "C" fn _rust_entry() -> ! {
-    unsafe {
-        print_stuff();
-    }
+    let mut writer = uart::Writer::new();
+    writer.write_string("Hello, world!");
+
     loop {}
 }

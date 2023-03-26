@@ -9,3 +9,4 @@ authors = ["Tyler J. Ferrara"]
 readme = "README.md"
 
 [dependencies]
+uart_16550 = "0.2.18"
