@@ -14,7 +14,9 @@ fn panic(_info: &PanicInfo) -> ! {
 #[no_mangle]
 pub extern "C" fn _rust_entry() -> ! {
     let mut writer = uart::Writer::new();
-    writer.write_string("Hello, world!");
+    writer.write_string("Hello, world!\n");
 
+	let num:i8 = 10;
+	println!("Hexadecimal number is: {:#02X}", num);
     loop {}
 }
